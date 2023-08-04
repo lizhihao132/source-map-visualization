@@ -1,7 +1,7 @@
 (() => {
 	
   let _input_files = null
-  let _switch_view = false
+  let _switch_view = true
   async function doSwitchView(){
 	  _switch_view = !_switch_view
 	 // bounds() 函数会自动运行, 然后会触发重绘
