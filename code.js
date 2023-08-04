@@ -2,21 +2,25 @@
 	
   let _input_files = null
   let _switch_view = true
-  async function doSwitchView(){
-	  _switch_view = !_switch_view
-	 // bounds() 函数会自动运行, 然后会触发重绘
-	 swapSections()
-	 
-	 function swapSections() {
-      const toolbar = document.getElementById('toolbar');
-      
-      const o_ = document.getElementById('original_toolbar_section');
-      const g_ = document.getElementById('generated_toolbar_section');
+  if(_switch_view){
+	  swapSections()
+  }
+  
+  function swapSections() {
+	  const toolbar = document.getElementById('toolbar');
+	  
+	  const o_ = document.getElementById('original_toolbar_section');
+	  const g_ = document.getElementById('generated_toolbar_section');
 	  
 	  // 交换顺序.
 	  o_.style.order = o_.style.order==='1'? '0' : '1'
 	  g_.style.order = g_.style.order==='1'? '0' : '1'
-    }
+	}
+  
+  async function doSwitchView(){
+	  _switch_view = !_switch_view
+	 // bounds() 函数会自动运行, 然后会触发重绘
+	 swapSections()
   }
 
 
