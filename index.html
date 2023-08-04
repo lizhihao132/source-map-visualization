@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title>Source Map Visualization</title>
+  <title>Source Map 可视化</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -18,13 +18,8 @@
   <div id="dragTarget"></div>
   <div id="promptText">
     <section>
-      <h1>Source Map Visualization</h1>
-      <p>This is a visualization of JavaScript/<wbr>CSS source map data, which is useful for debugging problems with
-        generated source maps. It's designed to be high-performance so it doesn't fall over with huge source maps.</p>
-      <p>Drag and drop some files here or <button id="uploadFiles">Upload files</button> to get started. You can either
-        drop a single JavaScript/<wbr>CSS file with an inline source map comment, or a JavaScript/<wbr>CSS file and a separate
-        source map file together.</p>
-      <p>Or you can <button id="loadExample">Load an example</button> to play around with the visualization.</p>
+      <h1>Source Map 可视化</h1>
+      <p style="text-align: center;"> <button id="uploadFiles"> 上传文件 </button> sourcemap文件、源js(可多个)、生成js(1个), 根据sourcemap中的sources和file字段对应文件 <button id="loadExample"> 查看示例 </button> </p>
       <div id="errorText"></div>
       <noscript>This app requires JavaScript to work. Please enable JavaScript and reload the page.</noscript>
     </section>

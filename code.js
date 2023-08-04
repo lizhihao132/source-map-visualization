@@ -151,33 +151,74 @@
       finishLoadingCodeWithEmbeddedSourceMap(code, file0);
     }
 
-    else if (files.length === 2) {
-      const file0 = files[0];
-      const file1 = files[1];
-
-      if (isProbablySourceMap(file0)) {
-        const codePromise = loadFile(file1);
-        const mapPromise = loadFile(file0);
-        const code = await codePromise;
-        const map = await mapPromise;
-        finishLoading(code, map);
-      }
-
-      else if (isProbablySourceMap(file1)) {
-        const codePromise = loadFile(file0);
-        const mapPromise = loadFile(file1);
-        const code = await codePromise;
-        const map = await mapPromise;
-        finishLoading(code, map);
-      }
-
-      else {
-        showLoadingError(`The source map file must end in either ".map" or ".json" to be detected.`);
-      }
+    else if (files.length >=3) {
+	  let map_file = ''
+	  let map_obj = null;
+	  let parsed_generated_js_file_name = ''
+	  let parsed_source_js_file_name_list = []
+	  let js_file_map = new Map
+	  for(let file of files){
+		  if(isProbablySourceMap(file)){
+			  map_file = file
+			  map_obj = JSON.parse(await loadFile(map_file))
+			  console.info(map_obj.file, map_obj.sources)
+			  parsed_generated_js_file_name = map_obj.file
+			  parsed_source_js_file_name_list = map_obj.sources
+		  }else{
+			  js_file_map.set(file.name, file)
+		  }
+	  }
+	  
+	  if(!map_file || !map_obj){
+		  showLoadingError('need sourcemap file or parse sourcemap failed')
+		  return
+	  }
+	  if(!parsed_generated_js_file_name){
+		  showLoadingError('need generated js file')
+		  return
+	  }
+	  if(js_file_map.size < 2){
+		  showLoadingError('need at least 2 js files')
+		  return
+	  }
+	  if(parsed_source_js_file_name_list.length < 1){
+		  showLoadingError('need at least 1 source js file')
+		  return 
+	  }
+	  
+	  console.info(parsed_generated_js_file_name, parsed_source_js_file_name_list)
+	  
+	  let generated_js_file = ''
+	  
+	  for(let [name, file] of js_file_map){
+		  console.info(name)
+		  if(name === parsed_generated_js_file_name){
+			  generated_js_file = file
+			  console.info('found generated_js_file:', name)
+		  }
+	  }
+	  
+	  const generated_code = await loadFile(generated_js_file);
+	  console.info('generated_code length:', generated_code.length, ', mappings.length:', map_obj.mappings.length)
+	  map_obj.sourcesContent = []
+	  for(let one of parsed_source_js_file_name_list){
+		  let cur_source_code = ''
+		  if(js_file_map.has(one)){
+			cur_source_code = await loadFile(js_file_map.get(one))
+		  }else{
+			  // do nothing
+			  console.info('Attention, source js not uplaod:', one)
+		  }
+		  console.info('cur_source_code length:', cur_source_code.length, one)
+		  map_obj.sourcesContent.push(cur_source_code)	// 如果有一个 source 文件没有上传, 那就留空
+	  }
+		  
+	  let map = JSON.stringify(map_obj)
+	  finishLoading(generated_code, map);
     }
 
     else {
-      showLoadingError(`Please import either 1 or 2 files.`);
+      showLoadingError(`sourcemap文件格式是 .map 或 .json, sourcemap中的sources和file分别指示了源文件[array]和生成文件, 为了展示效果也应上传`);
     }
   }
 
@@ -514,6 +555,7 @@
         }
 
         const { sources, sourcesContent, names, mappings } = map;
+		
         const emptyData = new Int32Array(0);
         for (let i = 0; i < sources.length; i++) {
           sources[i] = {
