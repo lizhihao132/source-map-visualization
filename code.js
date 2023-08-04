@@ -1,7 +1,29 @@
 (() => {
+	
+  let _input_files = null
+  let _switch_view = false
+  async function doSwitchView(){
+	  _switch_view = !_switch_view
+	 // bounds() 函数会自动运行, 然后会触发重绘
+	 swapSections()
+	 
+	 function swapSections() {
+      const toolbar = document.getElementById('toolbar');
+      
+      const o_ = document.getElementById('original_toolbar_section');
+      const g_ = document.getElementById('generated_toolbar_section');
+	  
+	  // 交换顺序.
+	  o_.style.order = o_.style.order==='1'? '0' : '1'
+	  g_.style.order = g_.style.order==='1'? '0' : '1'
+    }
+  }
+
+
   ////////////////////////////////////////////////////////////////////////////////
   // Dragging
 
+  
   const dragTarget = document.getElementById('dragTarget');
   const uploadFiles = document.getElementById('uploadFiles');
   const loadExample = document.getElementById('loadExample');
@@ -144,7 +166,19 @@
     }
   }
 
+  /* 不需要手动重绘; 因为 
+  async function reStartLoading(){
+	  if(_input_files){
+		  await startLoading(_input_files)
+	  }else{
+		  console.info('cannot restart load, no input files')
+	  }
+  }
+  */
+  
   async function startLoading(files) {
+	  console.info('start loading ...', files)
+	_input_files = files
     if (files.length === 1) {
       const file0 = files[0];
       const code = await loadFile(file0);
@@ -700,17 +734,30 @@
           mappingsOffset: 3,
           otherSource,
           originalName,
-          bounds() {
-            return {
-              x: 0,
-              y: toolbarHeight,
-              width: (innerWidth >>> 1) - (splitterWidth >> 1),
-              height: innerHeight - toolbarHeight - statusBarHeight,
-            };
-          },
+
+		  bounds() {
+			//  console.info('bounds called')
+		    if(_switch_view){
+				const x = (innerWidth >> 1) + ((splitterWidth + 1) >> 1);
+				return {
+				  x,
+				  y: toolbarHeight,
+				  width: innerWidth - x,
+				  height: innerHeight - toolbarHeight - statusBarHeight,
+				};
+			}else{
+				return {
+				  x: 0,
+				  y: toolbarHeight,
+				  width: (innerWidth >>> 1) - (splitterWidth >> 1),
+				  height: innerHeight - toolbarHeight - statusBarHeight,
+				};
+			}
+		  },
         });
       };
       fileList.onchange = async () => {
+		  console.info('------ fileList change')
         originalTextArea = await updateOriginalSource(fileList.selectedIndex);
         isInvalid = true;
       };
@@ -725,15 +772,25 @@
       mappingsOffset: 0,
       otherSource,
       originalName,
-      bounds() {
-        const x = (innerWidth >> 1) + ((splitterWidth + 1) >> 1);
-        return {
-          x,
-          y: toolbarHeight,
-          width: innerWidth - x,
-          height: innerHeight - toolbarHeight - statusBarHeight,
-        };
-      },
+
+	  bounds() {
+		if(_switch_view){
+			return {
+			  x: 0,
+			  y: toolbarHeight,
+			  width: (innerWidth >>> 1) - (splitterWidth >> 1),
+			  height: innerHeight - toolbarHeight - statusBarHeight,
+			};
+		}else{
+			const x = (innerWidth >> 1) + ((splitterWidth + 1) >> 1);
+			return {
+			  x,
+			  y: toolbarHeight,
+			  width: innerWidth - x,
+			  height: innerHeight - toolbarHeight - statusBarHeight,
+			};
+		}
+	  },
     });
 
     // Only render the original text area once the generated text area is ready
@@ -835,7 +892,7 @@
     } catch (e) {
     }
     if (originalTextArea) originalTextArea.updateAfterWrapChange();
-    if (generatedTextArea) generatedTextArea.updateAfterWrapChange();
+	if (generatedTextArea) generatedTextArea.updateAfterWrapChange();
     isInvalid = true;
   };
 
@@ -1891,8 +1948,9 @@
     if (!generatedTextArea) return;
 
     const bodyStyle = getComputedStyle(document.body);
-    if (originalTextArea) originalTextArea.draw(bodyStyle);
+	if (originalTextArea) originalTextArea.draw(bodyStyle);
     generatedTextArea.draw(bodyStyle);
+	
 
     // Draw the splitter
     c.fillStyle = 'rgba(127, 127, 127, 0.2)';
@@ -1909,17 +1967,30 @@
         const originalArrowHead = hover.sourceIndex === generatedTextArea.sourceIndex;
         const generatedArrowHead = hover.sourceIndex === originalTextArea.sourceIndex;
         const [ox, oy, ow, oh] = originalHoverRect;
-        const [gx, gy, , gh] = generatedHoverRect;
-        const x1 = Math.min(ox + ow, originalBounds.x + originalBounds.width) + (originalArrowHead ? 10 : 2);
-        const x2 = Math.max(gx, generatedBounds.x + margin) - (generatedArrowHead ? 10 : 2);
+        const [gx, gy, gw, gh] = generatedHoverRect;
+        let x1 = Math.min(ox + ow, originalBounds.x + originalBounds.width) + (originalArrowHead ? 10 : 2);
+        let x2 = Math.max(gx, generatedBounds.x + margin) - (generatedArrowHead ? 10 : 2);
         const y1 = oy + oh / 2;
         const y2 = gy + gh / 2;
-
+		
+		// 左转右后, 曲线的绘制是由左边矩形的右边中点 --> 右边矩形的左边中点
+		if(_switch_view){
+			x1 -= ow
+			x2 += gw
+			
+			if (originalArrowHead) {
+				x1 -= 20	// adjust, 箭头的宽度
+			}
+			if(generatedArrowHead){
+				x2 += 20
+			}
+		}
+		
         c.save();
         c.beginPath();
         c.rect(0, toolbarHeight, innerWidth, innerHeight - toolbarHeight - statusBarHeight);
         c.clip();
-
+		
         // Draw the curve
         c.beginPath();
         c.moveTo(x1, y1);
@@ -1932,14 +2003,15 @@
         c.stroke();
 
         // Draw the arrow heads
+		
         c.beginPath();
         if (originalArrowHead) {
-          c.moveTo(x1 - 10, y1);
+          c.moveTo(_switch_view? (x1+10):(x1-10), y1);
           c.lineTo(x1, y1 + 5);
           c.lineTo(x1, y1 - 5);
         }
         if (generatedArrowHead) {
-          c.moveTo(x2 + 10, y2);
+          c.moveTo(_switch_view? (x2-10):(x2+10), y2);
           c.lineTo(x2, y2 + 5);
           c.lineTo(x2, y2 - 5);
         }
@@ -2003,6 +2075,18 @@
   } catch (e) {
     query.addListener(() => isInvalid = true);
   }
+  
+  ////////////////////////////////////////////////////////////////////////////////
+  // switch_view
+  document.getElementById('switch_view').addEventListener('click', async () => {
+    await doSwitchView()
+  })
+  
+  ////////////////////////////////////////////////////////////////////////////////
+  // home
+  document.getElementById('to_home').addEventListener('click', async () => {
+    window.location.href = '/';
+  })
 
   ////////////////////////////////////////////////////////////////////////////////
   // Theme

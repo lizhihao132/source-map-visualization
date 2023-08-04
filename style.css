@@ -49,12 +49,25 @@ canvas {
   margin-right: 20px;
 }
 
+.operation_icons{
+	position: absolute;
+	right: 0;
+    top: 0;
+	padding: 3px 5px;
+	z-index: 2;
+}
+
+#switch_view {
+  cursor: pointer;
+}
+
+#switch_view svg {
+  display: block;
+  width: 25px;
+  height: 25px;
+}
+
 #theme {
-  position: fixed;
-  right: 0;
-  top: 0;
-  padding: 3px 5px;
-  z-index: 2;
   cursor: pointer;
 }
 
