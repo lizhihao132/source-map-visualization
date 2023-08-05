@@ -21,6 +21,17 @@ canvas {
   box-shadow: inset 0 0 0 10px rgba(50, 150, 255, 0.75);
 }
 
+.sourcemap_png{
+  width: 90%;
+  height: auto;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 #toolbar {
   display: none;
   position: fixed;
@@ -125,7 +136,7 @@ label {
 }
 
 select {
-  width: 100%;
+  width: 90%;
 }
 
 h1 {

@@ -19,11 +19,22 @@
   <div id="promptText">
     <section>
       <h1>Source Map 可视化</h1>
-      <p style="text-align: center;"> <button id="uploadFiles"> 上传文件 </button> sourcemap文件、源js(可多个)、生成js(1个), 根据sourcemap中的sources和file字段对应文件 <button id="loadExample"> 查看示例 </button> </p>
+      <p style="text-align: center;"> 
+	  
+	  <button id="uploadFiles"> Upload(上传文件) </button>（`.map` and `.js` files, parse files by fileds `sources, file` in `.map` file）
+	  <button id="loadExample"> Example(查看示例) </button> </p>
 	  
       <div id="errorText"></div>
       <noscript>This app requires JavaScript to work. Please enable JavaScript and reload the page.</noscript>
     </section>
+	
+	<section>
+		<div class="center">
+			<img src="sourcemap.png" class="sourcemap_png" alt="sourcemap">
+		</div>
+	</section>
+	
+	
   </div>
   
   
