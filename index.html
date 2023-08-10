@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title>Source Map 可视化</title>
+  <title>Source Map Visualization</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -18,7 +18,7 @@
   <div id="dragTarget"></div>
   <div id="promptText">
     <section>
-      <h1>Source Map 可视化</h1>
+      <h1><a href="https://github.com/lizhihao132/source-map-visualization">Source Map Visualization</a></h1>
 	  <p style="font-size: 20px;font-weight: bold;">1. Click button to start</p>
       <p style="margin-left: 10px; text-align: center; font-size: 18px;">	  
 		  <button id="uploadFiles"> Upload(上传文件) </button>（`.map` and `.js` files, parse files by fileds `sources, file` in `.map` file）
@@ -51,24 +51,24 @@
 	
 	<section class="operation_icons" style="order: 2">
 	
-		<div id="theme" title="主题切换">
-			<svg id="theme-light" width="25" height="25" xmlns="http://www.w3.org/2000/svg" title="主题切换">
+		<div id="theme" title="switch web theme">
+			<svg id="theme-light" width="25" height="25" xmlns="http://www.w3.org/2000/svg" title="switch to dark">
 			  <path d="M13.5 4v3m9.5 6.5h-3M13.5 23v-3M7 13.5H4M9 9L7 7m13 0l-2 2m2 11l-2-2M7 20l2-2"></path>
 			  <circle cx="13.5" cy="13.5" r="4.5" stroke-width="0"></circle>
 			</svg>
-			<svg id="theme-dark" width="25" height="25" xmlns="http://www.w3.org/2000/svg" title="主题切换">
+			<svg id="theme-dark" width="25" height="25" xmlns="http://www.w3.org/2000/svg" title="switch to light">
 			  <path d="M10.1 6.6a8.08 8.08 0 00.24 11.06 8.08 8.08 0 0011.06.24c-6.46.9-12.2-4.84-11.3-11.3z" stroke-width="0">
 			  </path>
 			</svg>
 		</div>
 	
-		<div id="switch_view" title="左右视图切换">
+		<div id="switch_view" title="switch left to right">
 			<!-- https://feathericons.com/?query=arraw -->
-			<svg title="左右视图切换" viewBox="-5 -5 30 30" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1" ><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+			<svg title="switch left to right" viewBox="-5 -5 30 30" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1" ><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
 		</div>
 	  
-		  <div id="to_home" title="主页">
-			<svg title="主页" viewBox="-5 -5 30 30" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+		  <div id="to_home" title="Home Page">
+			<svg title="Home Page" viewBox="-5 -5 30 30" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
 		  </div>
 	  
    </section>
