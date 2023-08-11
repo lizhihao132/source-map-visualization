@@ -1,5 +1,7 @@
 (() => {
 	
+  let isInvalid = true;	
+	
   let _input_files = null
   let _switch_view = true
   if(_switch_view){
@@ -15,11 +17,12 @@
 	  // 交换顺序.
 	  o_.style.order = o_.style.order==='1'? '0' : '1'
 	  g_.style.order = g_.style.order==='1'? '0' : '1'
+	  
+	  isInvalid = true // requestAnimationFrame 会每秒 60 帧刷新并执行 draw 函数. 此处设置 isInvalid=true 会触发重绘.
 	}
   
   async function doSwitchView(){
 	  _switch_view = !_switch_view
-	 // bounds() 函数会自动运行, 然后会触发重绘
 	 swapSections()
   }
 
@@ -169,16 +172,6 @@
       showLoadingError(`Failed to find an embedded "/${c}# sourceMappingURL=" comment in the ${file ? 'imported file' : 'pasted text'}.`);
     }
   }
-
-  /* 不需要手动重绘; 因为 
-  async function reStartLoading(){
-	  if(_input_files){
-		  await startLoading(_input_files)
-	  }else{
-		  console.info('cannot restart load, no input files')
-	  }
-  }
-  */
   
   async function startLoading(files) {
 	  console.info('start loading ...', files)
@@ -224,12 +217,12 @@
 		  return 
 	  }
 	  
-	  console.info(parsed_generated_js_file_name, parsed_source_js_file_name_list)
+	  console.info('parsed_generated_js_file_name:', parsed_generated_js_file_name, 'parsed_source_js_file_name_list:', parsed_source_js_file_name_list)
 	  
 	  let generated_js_file = ''
 	  
 	  for(let [name, file] of js_file_map){
-		  console.info(name)
+		  
 		  if(name === parsed_generated_js_file_name){
 			  generated_js_file = file
 			  console.info('found generated_js_file:', name)
@@ -681,7 +674,7 @@
   }
 
   async function finishLoading(code, map) {
-	console.info('begin to load: code length:', code.length, 'sourcemap:', map)
+	console.info('begin to load: code length:', code.length)
     const startTime = Date.now();
     promptText.style.display = 'none';
     toolbar.style.display = 'flex';
@@ -708,7 +701,7 @@
 	console.info('end of wait for dom finished')
     const sm = parseSourceMap(map);
 	
-	console.info('parse sourcemap finished, sm:', sm)
+	//console.info('parse sourcemap finished, sm:', sm)
 
     // Show a progress bar if this is is going to take a while
     let charsSoFar = 0;
@@ -897,7 +890,7 @@
   const rowHeight = 21;
   const splitterWidth = 6;
   const margin = 64;
-  let isInvalid = true;
+  
   let originalTextArea;
   let generatedTextArea;
   let hover = null;

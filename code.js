@@ -1,4 +1,5 @@
 (() => {
+  let isInvalid = true;
 	
   let _input_files = null
   let _switch_view = true
@@ -15,11 +16,12 @@
 	  // 交换顺序.
 	  o_.style.order = o_.style.order==='1'? '0' : '1'
 	  g_.style.order = g_.style.order==='1'? '0' : '1'
+	  
+	  isInvalid = true // requestAnimationFrame 会每秒 60 帧刷新并执行 draw 函数. 此处设置 isInvalid=true 会触发重绘.
 	}
   
   async function doSwitchView(){
 	  _switch_view = !_switch_view
-	 // bounds() 函数会自动运行, 然后会触发重绘
 	 swapSections()
   }
 
@@ -877,7 +879,7 @@
   const rowHeight = 21;
   const splitterWidth = 6;
   const margin = 64;
-  let isInvalid = true;
+  isInvalid = true;
   let originalTextArea;
   let generatedTextArea;
   let hover = null;
@@ -1429,7 +1431,8 @@
         }
 
         const [x1, y1, x2, y2] = boxForRange(dx, dy, columnWidth, { startColumn, endColumn });
-        return [x1, y1, x2 - x1, y2 - y1];
+        let ret = [x1, y1, x2 - x1, y2 - y1];
+		return ret
       },
 
       onwheel(e) {
