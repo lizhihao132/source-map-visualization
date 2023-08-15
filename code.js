@@ -1638,7 +1638,7 @@
               currentColumn = endColumn;
             }
           }
-
+		  
           // Draw the mappings
           for (let map = firstMapping; map < mappings.length; map += 6) {
             if (mappings[map + mappingsOffset] !== lineIndex || mappings[map + mappingsOffset + 1] >= lastIndex) break;
