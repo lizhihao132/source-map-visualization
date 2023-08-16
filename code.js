@@ -1638,7 +1638,7 @@
               currentColumn = endColumn;
             }
           }
-		  
+    
           // Draw the mappings
           for (let map = firstMapping; map < mappings.length; map += 6) {
             if (mappings[map + mappingsOffset] !== lineIndex || mappings[map + mappingsOffset + 1] >= lastIndex) break;
@@ -1703,7 +1703,6 @@
           columnWidth, columnsAcross, wrappedRows,
           maxScrollX, maxScrollY, scrollbarX, scrollbarY,
         } = computeScrollbarsAndClampScroll();
-
         // Compute the visible column/row rectangle
         const firstColumn = Math.max(0, Math.floor((scrollX - textPaddingX) / columnWidth));
         const lastColumn = Math.max(0, Math.ceil((scrollX - textPaddingX + width - margin - (wrap ? scrollbarThickness : 0)) / columnWidth));
@@ -1817,7 +1816,11 @@
             }
           }
         }
-        (sourceIndex === null ? generatedStatus : originalStatus).textContent = status;
+        if(_switch_view){
+          (sourceIndex === null ? originalStatus : generatedStatus).textContent = status;
+        } else{
+          (sourceIndex === null ? generatedStatus : originalStatus).textContent = status;
+        }
 
         // Fade out wrapped mappings and hover boxes
         const wrapLeft = x + margin + textPaddingX;
@@ -1968,6 +1971,12 @@
       const originalHoverRect = originalTextArea.getHoverRect();
       const generatedHoverRect = generatedTextArea.getHoverRect();
       if (originalHoverRect && generatedHoverRect) {
+		// 画 canvas 最外层的框.
+        c.save();
+        c.beginPath();
+        c.rect(0, toolbarHeight, innerWidth, innerHeight - toolbarHeight - statusBarHeight);
+        c.clip();
+
         const textColor = bodyStyle.color;
         const originalBounds = originalTextArea.bounds();
         const generatedBounds = generatedTextArea.bounds();
@@ -1975,36 +1984,60 @@
         const generatedArrowHead = hover.sourceIndex === originalTextArea.sourceIndex;
         const [ox, oy, ow, oh] = originalHoverRect;
         const [gx, gy, gw, gh] = generatedHoverRect;
-        let x1 = Math.min(ox + ow, originalBounds.x + originalBounds.width) + (originalArrowHead ? 10 : 2);
-        let x2 = Math.max(gx, generatedBounds.x + margin) - (generatedArrowHead ? 10 : 2);
-        const y1 = oy + oh / 2;
-        const y2 = gy + gh / 2;
-		
-		// 左转右后, 曲线的绘制是由左边矩形的右边中点 --> 右边矩形的左边中点
-		if(_switch_view){
-			x1 -= ow
-			x2 += gw
-			
-			if (originalArrowHead) {
-				x1 -= 20	// adjust, 箭头的宽度
-			}
-			if(generatedArrowHead){
-				x2 += 20
-			}
-		}
-		
-        c.save();
-        c.beginPath();
-        c.rect(0, toolbarHeight, innerWidth, innerHeight - toolbarHeight - statusBarHeight);
-        c.clip();
-		
+        let x1,x2,y1,y2 = 0;
+	
         // Draw the curve
         c.beginPath();
-        c.moveTo(x1, y1);
-        c.bezierCurveTo(
-          (x1 + 2 * x2) / 3 + margin / 2, y1,
-          (x1 * 2 + x2) / 3 - margin / 2, y2,
-          x2, y2);
+
+        console.log(((window.innerWidth-splitterWidth)/2)-generatedBounds.width);
+
+        // 左转右后, 曲线的绘制是由左边矩形的右边中点 --> 右边矩形的左边中点
+		// x1, y1 是曲线的起点
+		if(_switch_view){
+          	y1 = oy + oh / 2;
+			// gw 是假定不换行的情况下的宽度 (如果实际发生了换行, 则此值会比较大) 
+			// gh 是固定的, 行高, 17px
+			// canvas 大框里有两个区域，generatedBounds.width 是 canvas 大框的最左边到左边框的右边的距离(约等于1/2大框 宽度)。
+			// gx和gy 是当前框的左上角的位置（当实际发生换行时, 就是第一行的矩形框的左上角）
+			// 下面是为了判断选中框实际发生了换行.
+          if(gw>(generatedBounds.width-gx)) {
+            x1 = Math.min(ox - ow, originalBounds.x + originalBounds.width) - (originalArrowHead ? 10 : 2);
+            let i= 0;
+            x2 = (gw-generatedBounds.width+gx) + 84;
+            while(x2 > generatedBounds.width) {
+              i++;
+              x2 -= generatedBounds.width-89;
+            }
+            y2 = i===0?(gy+gh+gh/2):(gy + gh/2 + (gh*(i+2)));
+          } else{
+            x1 = Math.min(ox, originalBounds.x + originalBounds.width) - (originalArrowHead ? 10 : 2);
+            x2 = Math.max(gx+gw, generatedBounds.x + margin) - (generatedArrowHead ? 10 : 2);
+            y2 = gy + gh / 2;
+          }
+
+		    	if(originalArrowHead){
+		    		x2 += 5
+		    	}
+          if(generatedArrowHead){
+		    		x2 += 20
+		    	}
+          console.log(x1);
+          c.moveTo(x2, y2);
+          c.bezierCurveTo(
+            (x1 + 2 * x2) / 3 + margin / 2, y1,
+            (x1 * 2 + x2) / 3 - margin / 2, y2,
+            x1, y1);
+		    }else{
+          x1 = Math.min(ox + ow, originalBounds.x + originalBounds.width) + (originalArrowHead ? 10 : 2);
+          x2 = Math.max(gx, generatedBounds.x + margin) - (generatedBounds ? 10 : 2);
+          y1 = oy + oh / 2;
+          y2 = gy + gh / 2;
+          if (originalArrowHead) {
+		    		x2 += 10	
+		    	}
+          c.moveTo(x1, y1);
+          c.bezierCurveTo((x1 + 2 * x2) / 3 + margin / 2, y1,(x1 * 2 + x2) / 3 - margin / 2, y2,x2, y2);
+        }
         c.strokeStyle = textColor;
         c.lineWidth = 2;
         c.stroke();
