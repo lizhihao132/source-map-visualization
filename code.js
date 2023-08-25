@@ -1703,7 +1703,6 @@
           columnWidth, columnsAcross, wrappedRows,
           maxScrollX, maxScrollY, scrollbarX, scrollbarY,
         } = computeScrollbarsAndClampScroll();
-
         // Compute the visible column/row rectangle
         const firstColumn = Math.max(0, Math.floor((scrollX - textPaddingX) / columnWidth));
         const lastColumn = Math.max(0, Math.ceil((scrollX - textPaddingX + width - margin - (wrap ? scrollbarThickness : 0)) / columnWidth));
@@ -1817,7 +1816,6 @@
             }
           }
         }
-
         if(_switch_view){
           (sourceIndex === null ? originalStatus : generatedStatus).textContent = status;
         } else{
@@ -1973,6 +1971,7 @@
       const originalHoverRect = originalTextArea.getHoverRect();
       const generatedHoverRect = generatedTextArea.getHoverRect();
       if (originalHoverRect && generatedHoverRect) {
+		// 画 canvas 最外层的框.
         c.save();
         c.beginPath();
         c.rect(0, toolbarHeight, innerWidth, innerHeight - toolbarHeight - statusBarHeight);
@@ -1993,8 +1992,14 @@
         console.log(((window.innerWidth-splitterWidth)/2)-generatedBounds.width);
 
         // 左转右后, 曲线的绘制是由左边矩形的右边中点 --> 右边矩形的左边中点
-		    if(_switch_view){
-          y1 = oy + oh / 2;
+		// x1, y1 是曲线的起点
+		if(_switch_view){
+          	y1 = oy + oh / 2;
+			// gw 是假定不换行的情况下的宽度 (如果实际发生了换行, 则此值会比较大) 
+			// gh 是固定的, 行高, 17px
+			// canvas 大框里有两个区域，generatedBounds.width 是 canvas 大框的最左边到左边框的右边的距离(约等于1/2大框 宽度)。
+			// gx和gy 是当前框的左上角的位置（当实际发生换行时, 就是第一行的矩形框的左上角）
+			// 下面是为了判断选中框实际发生了换行.
           if(gw>(generatedBounds.width-gx)) {
             x1 = Math.min(ox - ow, originalBounds.x + originalBounds.width) - (originalArrowHead ? 10 : 2);
             let i= 0;
