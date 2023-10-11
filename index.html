@@ -21,7 +21,7 @@
       <h1><a target="_blank" href="https://github.com/lizhihao132/source-map-visualization">Source Map Visualization</a></h1>
 	  <p style="font-size: 20px;font-weight: bold;">1. Click button to start</p>
       <p style="margin-left: 10px; text-align: center; font-size: 18px;">	  
-		  <button id="uploadFiles"> Upload(上传文件) </button>（`.map` and `.js` files, parse files by fileds `sources, file` in `.map` file）
+		  <button id="uploadFiles"> Upload(上传文件) </button>（`.map` and `.js` files, parse files by fileds `sources, sourcesContent, file` in `.map` file）
 		  <button id="loadExample"> Example(查看示例) </button>
 	  </p>
 	  
@@ -42,11 +42,19 @@
   
   <div id="toolbar" display: "flex">
     <section id="original_toolbar_section" style="display: flex; order: 0">
-	  <h2>Original&nbsp;code</h2>
-	  <div id="fileListParent"><select id="fileList"></select></div>	  
+	    <h2>Original&nbsp;code</h2>
+      <div id="search_code_ori" title="search offset in code">
+		  	<!-- https://feathericons.com/?query=search -->
+		  	<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+		  </div>
+	    <div id="fileListParent"><select id="fileList"></select></div>	  
     </section>
     <section id="generated_toolbar_section" style="order: 1">
       <h2>Generated&nbsp;code</h2>
+      <div id="search_code_gen" title="search offset in code">
+        <!-- https://feathericons.com/?query=search -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </div>
     </section>
 	
 	<section class="operation_icons" style="order: 2">
@@ -88,12 +96,30 @@
     </section>
   </div>
   
-  
- 
   <div id="progressBar">
     <div class="progress"></div>
   </div>
-  <script src="code2.js"></script>
+
+  <div id="searchDialog">
+    <div class="search-wrap">
+      <div class="original">
+        <p class="title">Original code:</p>
+        <p> <span>Line: </span><input type="text" size="10" id="input_ori_line"> &nbsp;&nbsp;&nbsp;&nbsp;
+            <span>Offset: </span><input type="text" size="10" id="input_ori_offset"></p>
+      </div>
+      <div class="generated">
+        <p class="title">Generated code:</span>
+        <p> <span>Line: </span><input type="text" size="10" id="input_gen_line"> &nbsp;&nbsp;&nbsp;&nbsp;
+            <span>Offset: </span><input type="text" size="10" id="input_gen_offset"></p>
+      </div>
+      <div class="search-submit">
+        <div class="sure-btn" id="search-submit">搜索</div>
+        <div class="cancel-btn" id="search-cancel">取消</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="code.js"></script>
 </body>
 
 </html>

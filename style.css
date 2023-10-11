@@ -71,6 +71,59 @@ canvas {
 #switch_view {
   cursor: pointer;
 }
+#search_code_ori,#search_code_gen{
+  cursor: pointer;
+  margin-top: 3px;
+}
+
+#searchDialog{
+  display: none;
+  width: 400px;
+  height: 200px;
+  background-color:rgb(210, 204, 204);
+  border: 1px solid rgb(79, 74, 74);
+  border-radius: 4px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin:  auto;
+  z-index: 3;
+}
+.search-wrap{
+  width: 350px;
+  margin: 40px auto 0;
+}
+.search-wrap .title{
+  font-size: 18px;
+  font-weight: bold;
+}
+.generated{
+  margin-top: 40px;
+}
+.search-submit{
+  width: 250px;
+  display: flex;
+  justify-content: space-between;
+  margin: 40px auto 0;
+}
+.search-submit .sure-btn,
+.search-submit .cancel-btn{
+  cursor: pointer;
+  width: 100px;
+  height: 30px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 30px;
+  border-radius: 5px;
+  background: #eceae8;
+  border: 1px solid rgb(79, 74, 74);
+}
+.search-submit .cancel-btn{
+  background: none;
+}
 
 #switch_view svg {
   display: block;

@@ -16,7 +16,6 @@
 	  // 交换顺序.
 	  o_.style.order = o_.style.order==='1'? '0' : '1'
 	  g_.style.order = g_.style.order==='1'? '0' : '1'
-	  
 	  isInvalid = true // requestAnimationFrame 会每秒 60 帧刷新并执行 draw 函数. 此处设置 isInvalid=true 会触发重绘.
 	}
   
@@ -25,10 +24,10 @@
 	 swapSections()
   }
 
-
   ////////////////////////////////////////////////////////////////////////////////
   // Dragging
 
+  let isSearchCode = false; // 是否正在搜索代码.
   
   const dragTarget = document.getElementById('dragTarget');
   const uploadFiles = document.getElementById('uploadFiles');
@@ -172,16 +171,8 @@
     }
   }
 
-  /* 不需要手动重绘; 因为 
-  async function reStartLoading(){
-	  if(_input_files){
-		  await startLoading(_input_files)
-	  }else{
-		  console.info('cannot restart load, no input files')
-	  }
-  }
-  */
-  
+
+  // 如果 sourcemap 文件中的 sourcesContent 字段内已经给出了某个 source 的原码就使用它, 否则在已上传的 files 查找相应名字的原文件, 如果没有, 就忽略.
   async function startLoading(files) {
 	  console.info('start loading ...', files)
 	_input_files = files
@@ -191,11 +182,12 @@
       finishLoadingCodeWithEmbeddedSourceMap(code, file0);
     }
 
-    else if (files.length >=3) {
+    else if (files.length >= 2) {
 	  let map_file = ''
 	  let map_obj = null;
 	  let parsed_generated_js_file_name = ''
 	  let parsed_source_js_file_name_list = []
+	  let parsed_source_content_list = []
 	  let js_file_map = new Map
 	  for(let file of files){
 		  if(isProbablySourceMap(file)){
@@ -204,6 +196,7 @@
 			  console.info(map_obj.file, map_obj.sources)
 			  parsed_generated_js_file_name = map_obj.file
 			  parsed_source_js_file_name_list = map_obj.sources
+			  parsed_source_content_list = map_obj.sourcesContent
 		  }else{
 			  js_file_map.set(file.name, file)
 		  }
@@ -217,10 +210,12 @@
 		  showLoadingError('need generated js file')
 		  return
 	  }
+	  /*
 	  if(js_file_map.size < 2){
 		  showLoadingError('need at least 2 js files')
 		  return
 	  }
+	  */
 	  if(parsed_source_js_file_name_list.length < 1){
 		  showLoadingError('need at least 1 source js file')
 		  return 
@@ -238,19 +233,38 @@
 		  }
 	  }
 	  
+	  if(generated_js_file.length===0){
+		  if(js_file_map.size < 2){
+			  for(let [_, file] of js_file_map){
+				  generated_js_file = file
+			  }
+		  }
+	  }
+	  
 	  const generated_code = await loadFile(generated_js_file);
 	  console.info('generated_code length:', generated_code.length, ', mappings.length:', map_obj.mappings.length)
-	  map_obj.sourcesContent = []
-	  for(let one of parsed_source_js_file_name_list){
+	  if(!map_obj.sourcesContent){
+		map_obj.sourcesContent = []
+	  }
+	  for(let i_=0;i_ < parsed_source_js_file_name_list.length;++ i_){
+		  const one = parsed_source_js_file_name_list[i_]
+		  
+		  if(parsed_source_content_list[i_] && parsed_source_content_list[i_].length>0){
+			console.info('loading source code from sourcemap, source_file:', one, 'code length:', parsed_source_content_list[i_].length)
+			continue
+		  }
+			  
 		  let cur_source_code = ''
 		  if(js_file_map.has(one)){
 			cur_source_code = await loadFile(js_file_map.get(one))
-		  }else{
-			  // do nothing
-			  console.info('Attention, source js not uplaod:', one)
+		  }
+		  else{
+			// do nothing
+			console.info('Attention, source js not uplaod:', one)
 		  }
 		  console.info('cur_source_code length:', cur_source_code.length, one)
-		  map_obj.sourcesContent.push(cur_source_code)	// 如果有一个 source 文件没有上传, 那就留空
+		  //map_obj.sourcesContent.push(cur_source_code)	// 如果有一个 source 文件没有上传, 那就留空
+		  map_obj.sourcesContent[i_] = cur_source_code
 	  }
 		  
 	  let map = JSON.stringify(map_obj)
@@ -1317,6 +1331,7 @@
       }
 
       function rangeOfMapping(map) {
+        // console.log(mappings, map,mappingsOffset,line);
         if (mappings[map + mappingsOffset] !== line) return null;
         let startIndex = mappings[map + mappingsOffset + 1];
         let endIndex =
@@ -1429,15 +1444,14 @@
           startColumn -= columnAdjustment;
           endColumn -= columnAdjustment;
         }
-
         const [x1, y1, x2, y2] = boxForRange(dx, dy, columnWidth, { startColumn, endColumn });
         let ret = [x1, y1, x2 - x1, y2 - y1];
-		return ret
+		    return ret
       },
 
       onwheel(e) {
         let { x, y, width, height } = bounds();
-        if (e.pageX >= x && e.pageX < x + width && e.pageY >= y && e.pageY < y + height) {
+        if (e.pageX >= x && e.pageX < x + width && e.pageY >= y && e.pageY < y + height && !isSearchCode) {
           scrollX = Math.round(scrollX + e.deltaX);
           scrollY = Math.round(scrollY + e.deltaY);
           computeScrollbarsAndClampScroll();
@@ -1513,6 +1527,7 @@
           mousemove = e => {
             scrollX = Math.round(originalScrollX + (e.pageX - x - px) * maxScrollX / (scrollbarX.trackLength - scrollbarX.thumbLength));
             computeScrollbarsAndClampScroll();
+            if(!isSearchCode)
             isInvalid = true;
           };
         } else if (scrollbarY && px > width - scrollbarThickness) {
@@ -1520,6 +1535,7 @@
           mousemove = e => {
             scrollY = Math.round(originalScrollY + (e.pageY - y - py) * maxScrollY / (scrollbarY.trackLength - scrollbarY.thumbLength));
             computeScrollbarsAndClampScroll();
+            if(!isSearchCode)
             isInvalid = true;
           };
         } else {
@@ -1567,6 +1583,8 @@
         if (startX === endX && startY === endY) return;
         const duration = 250;
         animate = () => {
+          console.info('isInvalid11');
+          // debugger
           isInvalid = true;
           const current = Date.now();
           let t = (current - start) / duration;
@@ -1946,6 +1964,82 @@
 
         c.restore();
       },
+
+      getSearchRect(line,offset,type) {
+        const { index: snappedRoundedIndex, column: snappedRoundedColumn } = analyzeLine(line, offset, offset, 'round');
+        const { index: snappedFlooredIndex, firstMapping, rangeOfMapping } = analyzeLine(line, offset, offset, 'floor');
+        const range = rangeOfMapping(firstMapping);
+        if(range) {
+          let { startColumn, endColumn } = range;
+          const { columnWidth, columnsAcross, wrappedRows } = computeScrollbarsAndClampScroll();
+          const rowDelta = wrap ? Math.floor(offset / columnsAcross) : 0;
+          const row = wrappedRows[line] + rowDelta;
+          const lineIndex = lineIndexForRow(wrappedRows, row);
+          const firstColumn = wrap && lineIndex < wrappedRows.length ? (row - wrappedRows[lineIndex]) * columnsAcross : 0;
+          const lastColumn = firstColumn + columnsAcross;
+          if (wrap) {
+            const columnAdjustment = rowDelta * columnsAcross;
+            startColumn -= columnAdjustment;
+            endColumn -= columnAdjustment;
+          }
+          // const { x, y } = bounds();
+          // const row = wrappedRows[line] + rowDelta;
+          // const dx = x - scrollX + margin + textPaddingX;
+          // const dy = y - scrollY + textPaddingY + row * rowHeight;
+          // const [x1, y1, x2, y2] = boxForRange(dx, dy, columnWidth, { startColumn, endColumn });
+          // let ret = [x1, y1, x2 - x1, y2 - y1];
+  
+          let mapping = null;
+          if (range !== null && (
+            // If this is a zero-width mapping, hit-test with the caret
+            (range.isLastMappingInLine && range.startIndex === snappedRoundedIndex) ||
+            // Otherwise, determine the bounding-box and hit-test against that
+            (snappedFlooredIndex >= range.startIndex && snappedFlooredIndex < range.endIndex &&
+              range.startColumn < lastColumn && range.endColumn > firstColumn)
+          )) {
+            mapping = {
+              generatedLine: mappings[firstMapping],
+              generatedColumn: mappings[firstMapping + 1],
+              originalSource: mappings[firstMapping + 2],
+              originalLine: mappings[firstMapping + 3],
+              originalColumn: mappings[firstMapping + 4],
+              originalName: mappings[firstMapping + 5],
+            };
+          }
+  
+          hover = { sourceIndex, lineIndex, row, column: snappedRoundedColumn, index: snappedRoundedIndex, mapping };
+          
+          if(type==='original') {
+            originalTextArea.scrollTo(offset,line);
+            if(!hover.mapping) {
+              alert('no mapping');
+              return
+            }
+            generatedTextArea.scrollTo(hover.mapping.generatedColumn, hover.mapping.generatedLine);
+          } else{
+            generatedTextArea.scrollTo(offset,line);
+            originalTextArea.scrollTo(hover.mapping.originalColumn, hover.mapping.originalLine);
+          }
+
+          // debugger
+          setTimeout(()=>{
+            console.warn('isInvalid12');
+            isInvalid = true;
+          },0)
+  
+          const searchDialog = document.getElementById('searchDialog');
+          searchDialog.children[0].children[0].children[1].children[1].value = '';
+          searchDialog.children[0].children[0].children[1].children[3].value = '';
+          searchDialog.children[0].children[1].children[1].children[1].value = '';
+          searchDialog.children[0].children[1].children[1].children[3].value = '';
+          searchDialog.style.display = 'none';
+          setTimeout(() => {
+            isSearchCode = false;
+          },3000);
+        } else{
+          alert('No results found');
+        }
+      },
     };
   }
 
@@ -1969,7 +2063,7 @@
     // Draw the arrow between the two hover areas
     if (hover && hover.mapping && originalTextArea && originalTextArea.sourceIndex === hover.mapping.originalSource) {
       const originalHoverRect = originalTextArea.getHoverRect();
-      const generatedHoverRect = generatedTextArea.getHoverRect();
+      let generatedHoverRect = generatedTextArea.getHoverRect();
       if (originalHoverRect && generatedHoverRect) {
 		// 画 canvas 最外层的框.
         c.save();
@@ -1988,8 +2082,6 @@
 	
         // Draw the curve
         c.beginPath();
-
-        console.log(((window.innerWidth-splitterWidth)/2)-generatedBounds.width);
 
         // 左转右后, 曲线的绘制是由左边矩形的右边中点 --> 右边矩形的左边中点
 		// x1, y1 是曲线的起点
@@ -2021,7 +2113,6 @@
           if(generatedArrowHead){
 		    		x2 += 20
 		    	}
-          console.log(x1);
           c.moveTo(x2, y2);
           c.bezierCurveTo(
             (x1 + 2 * x2) / 3 + margin / 2, y1,
@@ -2066,22 +2157,23 @@
   document.onmousemove = e => {
     let oldHover = hover;
     hover = null;
+    if (originalTextArea && !isSearchCode) originalTextArea.onmousemove(e);
+    if (generatedTextArea && !isSearchCode) generatedTextArea.onmousemove(e);
 
-    if (originalTextArea) originalTextArea.onmousemove(e);
-    if (generatedTextArea) generatedTextArea.onmousemove(e);
-
-    if (JSON.stringify(hover) !== JSON.stringify(oldHover)) {
+    if (JSON.stringify(hover) !== JSON.stringify(oldHover) && !isSearchCode) {
+      console.info('isInvalid13');
+      // debugger
       isInvalid = true;
     }
   };
 
   document.onmousedown = e => {
-    if (originalTextArea) originalTextArea.onmousedown(e);
-    if (generatedTextArea) generatedTextArea.onmousedown(e);
+    if (originalTextArea && !isSearchCode) originalTextArea.onmousedown(e);
+    if (generatedTextArea && !isSearchCode) generatedTextArea.onmousedown(e);
   };
 
   onblur = () => {
-    if (hover) {
+    if (hover && !isSearchCode) {
       hover = null;
       isInvalid = true;
     }
@@ -2089,8 +2181,8 @@
 
   canvas.addEventListener('wheel', e => {
     e.preventDefault();
-    if (originalTextArea) originalTextArea.onwheel(e);
-    if (generatedTextArea) generatedTextArea.onwheel(e);
+    if (originalTextArea && !isSearchCode) originalTextArea.onwheel(e);
+    if (generatedTextArea && !isSearchCode) generatedTextArea.onwheel(e);
   }, { passive: false });
 
   onresize = () => {
@@ -2111,11 +2203,50 @@
 
   let query = matchMedia('(prefers-color-scheme: dark)');
   try {
-    query.addEventListener('change', () => isInvalid = true);
+    query.addEventListener('change', () => {
+      isInvalid = true;
+    });
   } catch (e) {
-    query.addListener(() => isInvalid = true);
+    query.addListener(() => {
+      isInvalid = true;
+    });
   }
-  
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // search_code
+  document.getElementById('search_code_ori').addEventListener('click', async () => {
+    if(!isSearchCode) {
+      isSearchCode = true;
+      const searchDialog = document.getElementById('searchDialog');
+      searchDialog.style.display = 'block';
+      searchDialog.children[0].children[0].style.display = 'block';
+      searchDialog.children[0].children[1].style.display = 'none';
+    }
+  })
+  document.getElementById('search_code_gen').addEventListener('click', async () => {
+    if(!isSearchCode) {
+      isSearchCode = true;
+      const searchDialog = document.getElementById('searchDialog');
+      searchDialog.style.display = 'block';
+      searchDialog.children[0].children[1].style.display = 'block';
+      searchDialog.children[0].children[0].style.display = 'none';
+    }
+  })
+  // search offset in code
+  document.getElementById('search-submit').addEventListener('click', async () => {
+    doSearchCode();
+  })
+  // close dialog
+  document.getElementById('search-cancel').addEventListener('click', async () => {
+    isSearchCode = false;
+    const searchDialog = document.getElementById('searchDialog');
+    searchDialog.children[0].children[0].children[1].children[1].value = '';
+    searchDialog.children[0].children[0].children[1].children[3].value = '';
+    searchDialog.children[0].children[1].children[1].children[1].value = '';
+    searchDialog.children[0].children[1].children[1].children[3].value = '';
+    searchDialog.style.display = 'none';
+  })
+
   ////////////////////////////////////////////////////////////////////////////////
   // switch_view
   document.getElementById('switch_view').addEventListener('click', async () => {
@@ -2125,7 +2256,7 @@
   ////////////////////////////////////////////////////////////////////////////////
   // home
   document.getElementById('to_home').addEventListener('click', async () => {
-    window.location.href = 'https://lizhihao132.github.io/source-map-visualization/';
+    window.location.href = 'https://vis-sourcemap.pages.woa.com/';
   })
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -2153,6 +2284,31 @@
       updateTheme(null)
     }
   }
+
+  // 执行搜索代码行列号
+  function doSearchCode() {
+    const inputs = ['input_ori_line', 'input_ori_offset', 'input_gen_line', 'input_gen_offset'];
+    let searchs = [];
+    inputs.forEach((inputId,idx) => {
+      const inputEl = document.getElementById(inputId);
+      if (inputEl.value=='') return;
+      const inputValue = inputEl.value;
+      if (Number.isInteger(+inputValue) && inputValue >= 0) {
+        searchs.push({
+          key: inputs[idx],
+          value: inputValue,
+        })
+      }
+    });
+   if (searchs.length!==2) {
+    alert('请输入完整行列号！');
+    return;
+   }
+  const line = parseInt(searchs[0].value)- 1;
+  const offset = parseInt(searchs[1].value) + 2;
+  if (searchs[0].key==='input_ori_line' && searchs[1].key==='input_ori_offset') originalTextArea.getSearchRect(line,offset,'original');
+  if (searchs[0].key==='input_gen_line' && searchs[1].key==='input_gen_offset') generatedTextArea.getSearchRect(line,offset,'generated');
+}
 
   try {
     // Newer browsers
