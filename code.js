@@ -2256,7 +2256,7 @@
   ////////////////////////////////////////////////////////////////////////////////
   // home
   document.getElementById('to_home').addEventListener('click', async () => {
-    window.location.href = 'https://vis-sourcemap.pages.woa.com/';
+    window.location.href = 'https://lizhihao132.github.io/source-map-visualization/';
   })
 
   ////////////////////////////////////////////////////////////////////////////////
